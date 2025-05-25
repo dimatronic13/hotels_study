@@ -15,6 +15,8 @@ hotels = [
 
 PAGE = 1
 PER_PAGE = 3
+
+
 @hotel_router.get("/hotels")
 def get_hotels(
         id: int | None = Query(None, description="Айдишник"),
@@ -36,7 +38,7 @@ def get_hotels(
     pages_count = math.ceil(len(hotels_) / per_page)
     page = min(pages_count, page)
     hotels_slice = hotels_[(page - 1) * per_page:page * per_page]
-    pages_count_dict = {"page" :page,"pages": pages_count}
+    pages_count_dict = {"page": page, "pages": pages_count}
     hotels_slice.append(pages_count_dict)
     return hotels_slice
 

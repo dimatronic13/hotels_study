@@ -1,11 +1,13 @@
-from fastapi import Query, Body, APIRouter
-from schemas.hotels import Hotel, HotelPATCH
-import math
+from fastapi import Query, APIRouter, Body
 
-hotel_router = APIRouter(prefix="/hotels", tags=["Hotels"])
+from src.api.dependencies import PaginationDep
+from src.schemas.hotels import Hotel, HotelPATCH
+
+hotel_router = APIRouter(prefix="/hotels", tags=["Отели"])
+
 hotels = [
-    {"id": 1, "title": "Sochi", "name": "Sochi-RSL"},
-    {"id": 2, "title": "Дубай", "name": "Dubai"},
+    {"id": 1, "title": "Sochi", "name": "sochi"},
+    {"id": 2, "title": "Дубай", "name": "dubai"},
     {"id": 3, "title": "Мальдивы", "name": "maldivi"},
     {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
     {"id": 5, "title": "Москва", "name": "moscow"},
@@ -13,34 +15,23 @@ hotels = [
     {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
 ]
 
-PAGE = 1
-PER_PAGE = 3
-
 
 @hotel_router.get("/hotels")
 def get_hotels(
+        pagination: PaginationDep,
         id: int | None = Query(None, description="Айдишник"),
         title: str | None = Query(None, description="Название отеля"),
-        page: int = PAGE,
-        per_page: int = PER_PAGE
 ):
     hotels_ = []
-    if page < PAGE:
-        page = PAGE
-    if per_page < 1:
-        per_page = PER_PAGE
     for hotel in hotels:
         if id and hotel["id"] != id:
             continue
         if title and hotel["title"] != title:
             continue
         hotels_.append(hotel)
-    pages_count = math.ceil(len(hotels_) / per_page)
-    page = min(pages_count, page)
-    hotels_slice = hotels_[(page - 1) * per_page:page * per_page]
-    pages_count_dict = {"page": page, "pages": pages_count}
-    hotels_slice.append(pages_count_dict)
-    return hotels_slice
+    if pagination.page and pagination.per_page:
+        return hotels_[pagination.per_page * (pagination.page-1):][:pagination.per_page]
+    return hotels_
 
 
 @hotel_router.delete("/hotels/{hotel_id}")
@@ -51,9 +42,25 @@ def delete_hotel(hotel_id: int):
 
 
 @hotel_router.post("/hotels")
-def create_hotel(hotel_data: Hotel):
+def create_hotel(hotel_data: Hotel = Body(openapi_examples={
+    "1": {
+        "summary": "Сочи",
+        "value": {
+            "title": "Отель Сочи 5 звезд у моря",
+            "name": "sochi_u_morya",
+        }
+    },
+    "2": {
+        "summary": "Дубай",
+        "value": {
+            "title": "Отель Дубай У фонтана",
+            "name": "dubai_fountain",
+        }
+    }
+})
+):
     global hotels
-    hotels.routerend({
+    hotels.append({
         "id": hotels[-1]["id"] + 1,
         "title": hotel_data.title,
         "name": hotel_data.name,

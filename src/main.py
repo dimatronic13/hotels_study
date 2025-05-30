@@ -1,6 +1,13 @@
-from fastapi import FastAPI, Query, Body
+from fastapi import FastAPI
 import uvicorn
-from hotels import hotel_router
+from src.api.hotels import hotel_router
+from src.config import settings
+
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
+
 app = FastAPI(docs_url="/docs", redoc_url="")
 app.include_router(hotel_router)
 

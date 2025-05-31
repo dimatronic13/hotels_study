@@ -1,11 +1,8 @@
 from fastapi import Query, APIRouter, Body
-from sqlalchemy import insert, select, func
-
-from src.api.dependencies import PaginationDep
-from src.database import async_session_maker, engine
-from src.models.hotels import HotelsOrm
-from src.schemas.hotels import Hotel, HotelPATCH
 from repositories.hotels import HotelsRepository
+from src.api.dependencies import PaginationDep
+from src.database import async_session_maker
+from src.schemas.hotels import Hotel, HotelPATCH
 
 hotel_router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -24,6 +21,10 @@ async def get_hotels(
             offset=per_page * (pagination.page - 1)
         )
 
+@hotel_router.get("/{hotel_id}")
+async def get_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        return await HotelsRepository(session).get_one_or_none(id=hotel_id)
 
 
 @hotel_router.delete("/{hotel_id}")
@@ -74,16 +75,11 @@ async def replace_hotel(
 
 
 @hotel_router.patch("/{hotel_id}")
-def update_hotel(
+async def update_hotel(
         hotel_id: int,
         hotel_data: HotelPATCH
 ):
-    for index, hotel in enumerate(hotels):
-        if hotel["id"] != hotel_id:
-            continue
-        if hotel_data.title and hotel["title"] != hotel_data.title and hotel_data.title != "string":
-            hotels[index]["title"] = hotel_data.title
-        if hotel_data.name and hotel["name"] != hotel_data.name and hotel_data.name != "string":
-            hotels[index]["name"] = hotel_data.name
-
+    async with async_session_maker() as session:
+        await HotelsRepository(session).edit(data=hotel_data,id=hotel_id,exclude_unset=True)
+        await session.commit()
     return {"status": "OK"}

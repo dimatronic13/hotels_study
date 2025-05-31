@@ -23,8 +23,12 @@ class BaseRepository:
         result = await self.session.execute(add_stmt)
         return result.scalars().one()
 
-    async def edit(self, data: BaseModel, **filter_by) -> None:
-        edit_stmn = update(self.model).filter_by(**filter_by).values(**data.model_dump())
+    async def edit(self, data: BaseModel, exclude_unset:bool =False, **filter_by) -> None:
+        edit_stmn = (
+            update(self.model).
+            filter_by(**filter_by).
+            values(**data.model_dump(exclude_unset=exclude_unset))
+            )
         #print(edit_stmn.compile(compile_kwargs={"literal_binds": True}))
         await self.session.execute(edit_stmn)
 

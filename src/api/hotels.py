@@ -56,7 +56,7 @@ async def create_hotel(hotel_data: HotelAdd = Body(openapi_examples={
     async with async_session_maker() as session:
         # add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
         # await session.execute(add_hotel_stmt)
-        result = await HotelsRepository(session).create(hotel_data)
+        result = await HotelsRepository(session).add(hotel_data)
         await session.commit()
 
     return {"status": "OK", "data": result}

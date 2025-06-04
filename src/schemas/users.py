@@ -24,3 +24,10 @@ class User(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class UserWithHashedPassword(User):
+    hashed_password: str
+
+
+
+
+

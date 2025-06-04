@@ -1,0 +1,1 @@
+from src.repositories.hotels import HotelsRepository

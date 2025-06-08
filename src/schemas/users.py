@@ -8,6 +8,10 @@ class UserAdd(BaseModel):
     lastname: str
     nickname: str
 
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
 class UserRequestAdd(BaseModel):
     email: EmailStr
     password: str

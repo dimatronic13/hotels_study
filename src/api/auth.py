@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Response
 from src.api.dependencies import UserIdDep
 from src.database import async_session_maker
 from src.repositories.users import UsersRepository
-from src.schemas.users import UserRequestAdd, UserAdd
+from src.schemas.users import UserRequestAdd, UserAdd, UserLogin
 from src.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация"])
@@ -29,7 +29,7 @@ async def register_user(
 
 @router.post("/login")
 async def login_user(
-        data: UserRequestAdd,
+        data: UserLogin,
         response: Response,
 ):
     async with async_session_maker() as session:
@@ -53,7 +53,7 @@ async def only_auth(
         return {"user_data": user}
 
 
-@router.get("/logout")
+@router.delete("/logout")
 async def logout(
         response: Response,
 ):

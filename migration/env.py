@@ -5,16 +5,16 @@ from sqlalchemy import pool
 
 from alembic import context
 
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent))
+# import sys
+# from pathlib import Path
+#
+# sys.path.append(str(Path(__file__).parent.parent))
 
 from src.database import Base
 from src.models.hotels import HotelsOrm
 from src.models.rooms import RoomsOrm
 from src.models.users import UsersOrm
-
+from src.models.booking import BookingsOrm
 from src.config import settings
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

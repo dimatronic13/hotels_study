@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException, Response
 
 from src.api.dependencies import UserIdDep, DBDep
-from src.database import async_session_maker
-from src.repositories.users import UsersRepository
 from src.schemas.users import UserRequestAdd, UserAdd, UserLogin
 from src.services.auth import AuthService
 
@@ -21,7 +19,7 @@ async def register_user(
                             lastname=data.lastname,
                             nickname=data.nickname)
     await db.users.add(new_user_data)
-    await db.users.commit()
+    await db.commit()
     return {"status": "OK"}
 
 

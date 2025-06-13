@@ -30,7 +30,7 @@ async def get_hotel(hotel_id: int, db: DBDep):
 @hotel_router.delete("/{hotel_id}")
 async def delete_hotel(hotel_id: int, db: DBDep):
     await db.hotels.delete(id=hotel_id)
-    await db.hotels.commit()
+    await db.commit()
     return {"status": "OK"}
 
 
@@ -53,7 +53,7 @@ async def create_hotel(db: DBDep, hotel_data: HotelAdd = Body(openapi_examples={
 })
 ):
     result = await db.hotels.add(hotel_data)
-    await db.hotels.commit()
+    await db.commit()
     return {"status": "OK", "data": result}
 
 
@@ -64,7 +64,7 @@ async def replace_hotel(
         db: DBDep
 ):
     await db.hotels.edit(data=hotel_data, id=hotel_id)
-    await db.hotels.commit()
+    await db.commit()
     return {"status": "OK"}
 
 
@@ -75,5 +75,5 @@ async def update_hotel(
         db: DBDep
 ):
     await db.hotels.edit(data=hotel_data, id=hotel_id, exclude_unset=True)
-    await db.hotels.session.commit()
+    await db.commit()
     return {"status": "OK"}

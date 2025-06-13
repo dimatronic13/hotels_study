@@ -6,20 +6,22 @@ from src.schemas.bookings import BookingAddRequest, BookingAdd
 router = APIRouter(prefix="/bookings", tags=["Бронирование"])
 
 
-@router.get("/bookings/me")
+
+@router.get("/")
+async def get_bookings( db: DBDep):
+    return await db.bookings.get_all()
+
+
+@router.get("/me")
 async def get_bookings( db: DBDep, user_id: UserIdDep,):
     return await db.bookings.get_filtered(user_id=user_id)
 
 
-@router.get("/bookings")
-async def get_bookings( db: DBDep, user_id: UserIdDep,):
-    return await db.bookings.get_all()
 
 
 
 @router.post("/")
-async def create_booking(room_id:int,
-                         db: DBDep,
+async def create_booking(db: DBDep,
                          user_id: UserIdDep,
                          booking_data: BookingAddRequest = Body(openapi_examples={
     "1": {

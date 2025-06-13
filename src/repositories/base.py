@@ -1,6 +1,5 @@
+from sqlalchemy import select, insert, update, delete
 from pydantic import BaseModel
-from sqlalchemy import select, insert, delete,update
-from sqlalchemy.exc import IntegrityError
 
 
 class BaseRepository:
@@ -10,8 +9,12 @@ class BaseRepository:
     def __init__(self, session):
         self.session = session
 
-    async def get_filtered(self, **filter_by):
-        query = select(self.model).filter_by(**filter_by)
+    async def get_filtered(self, *filter, **filter_by):
+        query = (
+            select(self.model)
+            .filter(*filter)
+            .filter_by(**filter_by)
+        )
         result = await self.session.execute(query)
         return [self.schema.model_validate(model) for model in result.scalars().all()]
 
@@ -27,27 +30,19 @@ class BaseRepository:
         return self.schema.model_validate(model)
 
     async def add(self, data: BaseModel):
-        add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        try:
-            result = await self.session.execute(add_stmt)
-        except IntegrityError as e:
-            return None
+        add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
+        result = await self.session.execute(add_data_stmt)
         model = result.scalars().one()
         return self.schema.model_validate(model)
 
-    async def edit(self, data: BaseModel, exclude_unset:bool =False, **filter_by) -> None:
-        edit_stmn = (
-            update(self.model).
-            filter_by(**filter_by).
-            values(**data.model_dump(exclude_unset=exclude_unset))
-            )
-        #print(edit_stmn.compile(compile_kwargs={"literal_binds": True}))
-        await self.session.execute(edit_stmn)
+    async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None:
+        update_stmt = (
+            update(self.model)
+            .filter_by(**filter_by)
+            .values(**data.model_dump(exclude_unset=exclude_unset))
+        )
+        await self.session.execute(update_stmt)
 
     async def delete(self, **filter_by) -> None:
         delete_stmt = delete(self.model).filter_by(**filter_by)
-        #print(delete_stmt.compile(compile_kwargs={"literal_binds": True}))
         await self.session.execute(delete_stmt)
-
-
-

@@ -1,14 +1,19 @@
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body
 
 from src.api.dependencies import DBDep, UserIdDep
-from src.schemas.booking import BookingAddRequest, Booking, BookingAdd
+from src.schemas.bookings import BookingAddRequest, BookingAdd
 
-router = APIRouter(prefix="/booking", tags=["Бронирование"])
+router = APIRouter(prefix="/bookings", tags=["Бронирование"])
 
 
-@router.get("/")
+@router.get("/bookings/me")
 async def get_bookings( db: DBDep, user_id: UserIdDep,):
     return await db.bookings.get_filtered(user_id=user_id)
+
+
+@router.get("/bookings")
+async def get_bookings( db: DBDep, user_id: UserIdDep,):
+    return await db.bookings.get_all()
 
 
 
@@ -35,12 +40,11 @@ async def create_booking(room_id:int,
     }
 })
 ):
-    if not user_id or not room_id:
-        HTTPException(detail="User id or room id is required", status_code=401)
-    rooms = await db.rooms.get_filtered(id=room_id)
-    price = rooms[0].price
-    print(price, user_id, room_id)
-    _booking_data = BookingAdd(user_id = user_id , price=price, **booking_data.model_dump())
+    room = await db.rooms.get_one_or_none(id=room_id)
+    price = room.price
+    _booking_data = BookingAdd(user_id = user_id,
+                               price=price,
+                               **booking_data.model_dump())
     result = await db.bookings.add(_booking_data)
     await db.commit()
     return {"status": "OK", "data": result}

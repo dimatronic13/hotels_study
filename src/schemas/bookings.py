@@ -12,8 +12,6 @@ class BookingAddRequest(BaseModel):
 class BookingAdd(BookingAddRequest):
     user_id: int
     price: int
-    model_config = ConfigDict(from_attributes=True)
-
 
 class Booking(BookingAdd):
     id: int

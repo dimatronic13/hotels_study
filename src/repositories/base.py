@@ -1,5 +1,6 @@
 from sqlalchemy import select, insert, update, delete
 from pydantic import BaseModel
+from sqlalchemy.orm import selectinload
 
 
 class BaseRepository:
@@ -21,7 +22,7 @@ class BaseRepository:
     async def get_all(self, *args, **kwargs):
         return await self.get_filtered()
 
-    async def get_one_or_none(self, **filter_by):
+    async def get_one_or_none(self,  **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
         model = result.scalars().one_or_none()
@@ -34,6 +35,10 @@ class BaseRepository:
         result = await self.session.execute(add_data_stmt)
         model = result.scalars().one()
         return self.schema.model_validate(model)
+
+    async def add_bulk(self, data: list[BaseModel]):
+        add_data_stmt = insert(self.model).values([item.model_dump() for item in data])
+        await self.session.execute(add_data_stmt)
 
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None:
         update_stmt = (

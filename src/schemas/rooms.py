@@ -1,21 +1,27 @@
 from pydantic import BaseModel, ConfigDict
 
+from src.schemas.facilities import Facility
+
 
 class RoomAddRequest(BaseModel):
     title: str
     description: str | None = None
     price: int
     quantity: int
+    facilities_ids: list[int] | None = None
 
 
-class RoomAdd(RoomAddRequest):
+class RoomAdd(BaseModel):
     hotel_id: int
-
-    model_config = ConfigDict(from_attributes=True)
+    title: str
+    description: str | None = None
+    price: int
+    quantity: int
 
 
 class Room(RoomAdd):
     id: int
+    facilities: list[Facility]  | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,9 +31,13 @@ class RoomPatchRequest(BaseModel):
     description: str | None = None
     price: int | None = None
     quantity: int | None = None
+    facilities_ids: list[int] | None = None
 
-
-class RoomPATCH(RoomPatchRequest):
+class RoomPatch(BaseModel):
     hotel_id: int
-
+    title: str | None = None
+    description: str | None = None
+    price: int | None = None
+    quantity: int | None = None
+    facilities_ids: list[int] | None = None
     model_config = ConfigDict(from_attributes=True)

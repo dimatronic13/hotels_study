@@ -46,7 +46,7 @@ class RoomsRepository(BaseRepository):
             return None
         return self.schema.model_validate(model)
 
-    async def update_room_facilities(
+    async def sync_room_facilities(
             self,
             room_id: int,
             facilities_ids: list[int],
@@ -59,19 +59,27 @@ class RoomsRepository(BaseRepository):
         if missing_ids:
             raise ValueError(f"Некорректные facility_id: {sorted(missing_ids)}")
 
-        # удалить старые связи
-        await self.session.execute(
-            delete(RoomsFacilitiesOrm).where(RoomsFacilitiesOrm.room_id == room_id)
-        )
+        query = select(RoomsFacilitiesOrm.facility_id).where(RoomsFacilitiesOrm.room_id == room_id)
+        result = await self.session.execute(query)
+        current_ids = set(result.scalars().all())
 
-        # вставить новые связи
-        if existing_ids:
+        to_add = existing_ids - current_ids
+        to_delete = current_ids - existing_ids
+
+        if to_delete:
+            await self.session.execute(
+                delete(RoomsFacilitiesOrm).where(
+                    RoomsFacilitiesOrm.room_id == room_id,
+                    RoomsFacilitiesOrm.facility_id.in_(to_delete)
+                )
+            )
+
+        if to_add:
             insert_data = [
                 {"room_id": room_id, "facility_id": fid}
-                for fid in existing_ids
+                for fid in to_add
             ]
             await self.session.execute(insert(RoomsFacilitiesOrm).values(insert_data))
-
 
     async def update_room_with_facilities(
         self,
@@ -92,12 +100,11 @@ class RoomsRepository(BaseRepository):
 
         # 2. Обновить связи facilities
         if room_data.facilities_ids is not None:
-            await self.update_room_facilities(
+            await self.sync_room_facilities(
                 room_id=room_id,
                 facilities_ids=room_data.facilities_ids,
                 facilities_repo=facilities_repo
             )
-
     async def patch_room_with_facilities(
         self,
         room_id: int,
@@ -112,7 +119,7 @@ class RoomsRepository(BaseRepository):
             await self.edit(data=patch, id=room_id, hotel_id=hotel_id, exclude_unset=True)
 
         if room_data.facilities_ids is not None:
-            await self.update_room_facilities(
+            await self.sync_room_facilities(
                 room_id=room_id,
                 facilities_ids=room_data.facilities_ids,
                 facilities_repo=facilities_repo

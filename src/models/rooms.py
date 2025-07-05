@@ -1,5 +1,5 @@
-from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey
 
 from src.database import Base
 
@@ -14,14 +14,7 @@ class RoomsOrm(Base):
     price: Mapped[int]
     quantity: Mapped[int]
 
-    facility_links: Mapped[list["RoomsFacilitiesOrm"]] = relationship(
-        back_populates="room",
-        cascade="all, delete-orphan"
-    )
-
-    # Упрощённый доступ напрямую к удобствам (viewonly)
     facilities: Mapped[list["FacilitiesOrm"]] = relationship(
-        secondary="rooms_facilities",
         back_populates="rooms",
-        viewonly=True
+        secondary="rooms_facilities",
     )
